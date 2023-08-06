@@ -31,7 +31,7 @@ pool.connect(err => {
 
 const adminSignup = async (req, res) => {
     try {
-        console.log("adminSignup called");
+        console.log("adminSignup called from account-service");
         console.log(req.body);
         const { username, password, adminName } = req.body;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -40,6 +40,7 @@ const adminSignup = async (req, res) => {
             values: [username, hashedPassword, adminName]
         };
         await pool.query(query);
+        console.log("Admin created");
         res.status(200).json({ message: 'Admin created' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -48,7 +49,7 @@ const adminSignup = async (req, res) => {
 
 const adminLogin = async (req, res) => {
     try {
-        console.log("adminLogin called");
+        console.log("adminLogin called from account-service");
         console.log(req.body);
         const { username, password } = req.body;
         const query = {
@@ -60,11 +61,14 @@ const adminLogin = async (req, res) => {
         if (user) {
             const match = await bcrypt.compare(password, user.password);
             if (match) {
+                console.log("Login successful");
                 res.status(200).json({ message: 'Login successful' });
             } else {
+                console.log("Invalid credentials");
                 res.status(401).json({ message: 'Invalid credentials' });
             }
         } else {
+            console.log("Invalid credentials");
             res.status(401).json({ message: 'Invalid credentials' });
         }
     } catch (error) {
