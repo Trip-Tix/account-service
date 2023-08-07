@@ -34,6 +34,19 @@ const adminSignup = async (req, res) => {
         console.log("adminSignup called from account-service");
         console.log(req.body);
         const { username, password, adminName } = req.body;
+        // Check if username already exists
+        const query1 = {
+            text: 'SELECT * FROM admin_info WHERE username = $1',
+            values: [username]
+        };
+        const result1 = await pool.query(query1);
+        const user = result1.rows[0];
+        if (user) {
+            console.log("Username already exists");
+            res.status(409).json({ message: 'Username already exists' });
+            return;
+        }
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const query = {
             text: 'INSERT INTO admin_info (username, password, admin_name) VALUES ($1, $2, $3)',
