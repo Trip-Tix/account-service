@@ -2,10 +2,13 @@ const { Pool } = require('pg');
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
 const e = require('express');
+const jwt = require('jsonwebtoken');
 
 const saltRounds = 10;
 
 dotenv.config();
+
+const secretKey = process.env.SECRETKEY;
 
 // Connect to Postgres
 const pool = new Pool({
@@ -75,6 +78,7 @@ const adminLogin = async (req, res) => {
             const match = await bcrypt.compare(password, user.password);
             if (match) {
                 console.log("Login successful");
+                // const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
                 res.status(200).json({ message: 'Login successful' });
             } else {
                 console.log("Invalid credentials");
