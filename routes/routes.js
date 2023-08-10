@@ -10,4 +10,7 @@ router.post('/api/admin/signup', bodyParser, adminController.adminSignup);
 // Admin login
 router.post('/api/admin/login', bodyParser, adminController.adminLogin);
 
+// Add admin role info
+router.post('/api/admin/addAdminRoleInfo', bodyParser, adminController.addAdminRoleInfo);
+
 module.exports = router;
