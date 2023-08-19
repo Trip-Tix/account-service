@@ -1,8 +1,8 @@
-const { Pool } = require('pg');
 const dotenv = require('dotenv');
 const bcrypt = require('bcrypt');
-const e = require('express');
 const jwt = require('jsonwebtoken');
+const amqp = require('amqplib')
+const accountPool = require('../config/accountDB.js');
 
 const saltRounds = 10;
 
@@ -10,53 +10,62 @@ dotenv.config();
 
 const secretKey = process.env.SECRETKEY;
 
-// Connect to Postgres
-const pool = new Pool({
-    host: process.env.PGHOST,
-    port: process.env.PGPORT,
-    user: process.env.PGUSER,
-    password: process.env.PGPASSWORD,
-    database: process.env.PGDATABASE,
-    idleTimeoutMillis: 0,
-    connectionTimeoutMillis: 0,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
+async function publishAdminCreatedMessage(adminData) {
+    const connection = await amqp.connect('amqp://rabbitmq:@triptix-rabbitmq-service:5672');
+    const channel = await connection.createChannel();
 
-pool.connect(err => {
-    if (err) {
-        console.error('connection error', err.stack);
-    } else {
-        console.log('connected to database');
-    }
-});
+    const exchangeName = 'admin_events'; // Choose a meaningful name for the exchange
+    await channel.assertExchange(exchangeName, 'fanout', { durable: false });
+
+    const message = JSON.stringify(adminData);
+    channel.publish(exchangeName, '', Buffer.from(message));
+
+    setTimeout(() => {
+        connection.close();
+    }, 500); // Close the connection after a short delay
+}
 
 const adminSignup = async (req, res) => {
     try {
         console.log("adminSignup called from account-service");
         console.log(req.body);
-        const { username, password, adminName } = req.body;
+        const { username, password, adminName, adminRole } = req.body;
         // Check if username already exists
         const query1 = {
             text: 'SELECT * FROM admin_info WHERE username = $1',
             values: [username]
         };
-        const result1 = await pool.query(query1);
+
+        const result1 = await accountPool.query(query1);
         const user = result1.rows[0];
         if (user) {
-            console.log("Username already exists");
+            console.log("Admin username already exists");
             res.status(409).json({ message: 'Username already exists' });
             return;
         }
+        // Get the admin role id
+        const query2 = {
+            text: 'SELECT admin_role_id FROM admin_role_info WHERE admin_role_name = $1',
+            values: [adminRole]
+        };
+        const adminRoleResult = await accountPool.query(query2);
+        const adminRoleId = adminRoleResult.rows[0].admin_role_id;
+        
         // Hash password
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const query = {
-            text: 'INSERT INTO admin_info (username, password, admin_name) VALUES ($1, $2, $3)',
-            values: [username, hashedPassword, adminName]
+            text: 'INSERT INTO admin_info (username, password, admin_name, admin_role_id) VALUES ($1, $2, $3, $4)',
+            values: [username, hashedPassword, adminName, adminRoleId]
         };
-        await pool.query(query);
+        await accountPool.query(query);
         console.log("Admin created");
+        // Publish admin created message
+        const adminData = {
+            username,
+            adminName,
+            adminRole
+        };
+        //publishAdminCreatedMessage(adminData);
         res.status(200).json({ message: 'Admin created' });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -72,22 +81,22 @@ const adminLogin = async (req, res) => {
             text: 'SELECT * FROM admin_info WHERE username = $1',
             values: [username]
         };
-        const result = await pool.query(query);
+        const result = await accountPool.query(query);
         const user = result.rows[0];
         if (user) {
             const match = await bcrypt.compare(password, user.password);
             if (match) {
-                console.log("Login successful");
-                const token = jwt.sign({ username }, secretKey, { expiresIn: '1h' });
+                console.log("Admin login successful");
+                const token = jwt.sign({ username }, secretKey, { expiresIn: '24h' });
                 // Get the admin role
                 const query1 = {
-                    text: 'SELECT admin_role FROM admin_role_info WHERE admin_role_id = $1',
-                    values: [user.admin_role_info]
+                    text: 'SELECT admin_role_name FROM admin_role_info WHERE admin_role_id = $1',
+                    values: [user.admin_role_id]
                 };
-                const result1 = await pool.query(query1);
-                const adminRole = result1.rows[0].admin_role;
+                const result1 = await accountPool.query(query1);
+                const adminRole = result1.rows[0].admin_role_name;
 
-                res.status(200).json({ message: 'Login successful', token, adminRole });
+                res.status(200).json({ message: 'Admin login successful', token, adminRole });
             } else {
                 console.log("Invalid credentials");
                 res.status(401).json({ message: 'Invalid credentials' });
@@ -118,10 +127,10 @@ const addAdminRoleInfo = async (req, res) => {
         const { adminRole } = req.body;
         // Check if admin role already exists
         const query1 = {
-            text: 'SELECT * FROM admin_role_info WHERE admin_role = $1',
+            text: 'SELECT * FROM admin_role_info WHERE admin_role_name = $1',
             values: [adminRole]
         };
-        const result1 = await pool.query(query1);
+        const result1 = await accountPool.query(query1);
         const adminRoleInfo = result1.rows[0];
         if (adminRoleInfo) {
             console.log("Admin role info already exists");
@@ -130,16 +139,17 @@ const addAdminRoleInfo = async (req, res) => {
         }
 
         const query = {
-            text: 'INSERT INTO admin_role_info (admin_role) VALUES ($1)',
+            text: 'INSERT INTO admin_role_info (admin_role_name) VALUES ($1)',
             values: [adminRole]
         };
-        await pool.query(query);
+        await accountPool.query(query);
         console.log("Admin role info added");
         res.status(200).json({ message: 'Admin role info added' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 }
+
 
 module.exports = {
     adminSignup,
