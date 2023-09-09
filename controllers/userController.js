@@ -62,7 +62,7 @@ const userLogin = async (req, res) => {
         const user = result.rows[0];
         if (!user) {
             console.log("User not found");
-            res.status(404).json({ message: 'User not found' });
+            res.status(401).json({ message: 'User not found' });
             return;
         }
         // Check if password is correct
