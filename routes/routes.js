@@ -8,6 +8,9 @@ const router = express.Router();
 // Admin signup
 router.post('/api/admin/signup', bodyParser, adminController.adminSignup);
 
+// Admin approval
+router.post('/api/admin/approval', bodyParser, adminController.adminApproval);
+
 // Admin login
 router.post('/api/admin/login', bodyParser, adminController.adminLogin);
 
@@ -19,5 +22,8 @@ router.post('/api/user/signup', bodyParser, userController.userSignup);
 
 // User login
 router.post('/api/user/login', bodyParser, userController.userLogin);
+
+// test rabbitmq
+router.post('/api/admin/testRabbitmq', bodyParser, adminController.testRabbitMQ);
 
 module.exports = router;
