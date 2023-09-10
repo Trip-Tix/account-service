@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const accountPool = require('../config/accountDB.js');
 const busPool = require('../config/busDB.js');
+const airPool = require('../config/airDB.js');
+const trainPool = require('../config/trainDB.js');
 
 const saltRounds = 10;
 
@@ -83,7 +85,121 @@ const userLogin = async (req, res) => {
     }
 }
 
+const userTicketHistory = async (req, res) => {
+    // verify token
+    const { token, userId } = req.body;
+    if (!token) {
+        console.log("Token not found");
+        res.status(401).json({ message: 'Token not found' });
+        return;
+    }
+    jwt.verify(token, secretKey, async (err, decoded) => {
+        if (err) {
+            console.log(err);
+            res.status(401).json({ message: 'Invalid token' });
+            return;
+        }
+        
+        try {
+            console.log("userTicketHistory called from account-service");
+            console.log(req.body);
+
+            // For bus
+            const busTicketInfoQuery = {
+                text: 'SELECT * FROM ticket_info WHERE user_id = $1',
+                values: [userId]
+            };
+            const busTicketInfoResult = await busPool.query(busTicketInfoQuery);
+            const busTicketInfo = busTicketInfoResult.rows;
+            console.log(busTicketInfo);
+
+            for (let i = 0; i < busTicketInfo.length; i++) {
+                const ticket = busTicketInfo[i];
+
+                const busScheduleId = ticket.bus_schedule_id;
+                const busInfoQuery = {
+                    text: `SELECT bus_schedule_info.unique_bus_id, bus_schedule_info.departure_time, 
+                    bus_schedule_info.schedule_date, bus_schedule_info.bus_id, bus_services.bus_company_name, 
+                    bus_coach_details.coach_id, bus_coach_details.brand_name_id, coach_info.coach_name, 
+                    brand_name_info.brand_name  
+                    FROM bus_schedule_info 
+                    INNER JOIN bus_services ON bus_schedule_info.bus_id = bus_services.bus_id 
+                    INNER JOIN bus_coach_details ON bus_schedule_info.unique_bus_id = bus_coach_details.unique_bus_id 
+                    INNER JOIN coach_info ON bus_coach_details.coach_id = coach_info.coach_id 
+                    INNER JOIN brand_name_info ON bus_coach_details.brand_name_id = brand_name_info.brand_name_id 
+                    WHERE bus_schedule_info.bus_schedule_id = $1`,
+                    values: [busScheduleId]
+                };
+                const busInfoResult = await busPool.query(busInfoQuery);
+                const busInfo = busInfoResult.rows[0];
+                console.log(busInfo);
+
+                ticket.busInfo = busInfo;
+
+                const journeyDate = new Date(busInfo.schedule_date);
+                // Check if journey date is passed
+                const today = new Date();
+                const todayDate = today.toISOString().split('T')[0];
+                if (journeyDate < todayDate) {
+                    ticket.isJourneyDatePassed = true;
+                } else {
+                    ticket.isJourneyDatePassed = false;
+                }
+
+            }
+
+            const busQueueTicketInfoQuery = {
+                text: 'SELECT * FROM ticket_queue WHERE user_id = $1',
+                values: [userId]
+            };
+            const busQueueTicketInfoResult = await busPool.query(busQueueTicketInfoQuery);
+            const busQueueTicketInfo = busQueueTicketInfoResult.rows;
+            console.log(busQueueTicketInfo);
+
+            for (let i = 0; i < busQueueTicketInfo.length; i++) {
+                const ticket = busQueueTicketInfo[i];
+                const busScheduleId = ticket.bus_schedule_id;
+                const busInfoQuery = {
+                    text: `SELECT bus_schedule_info.unique_bus_id, bus_schedule_info.departure_time,
+                    bus_schedule_info.schedule_date, bus_schedule_info.bus_id, bus_services.bus_company_name,
+                    bus_coach_details.coach_id, bus_coach_details.brand_name_id, coach_info.coach_name,
+                    brand_name_info.brand_name
+                    FROM bus_schedule_info
+                    INNER JOIN bus_services ON bus_schedule_info.bus_id = bus_services.bus_id
+                    INNER JOIN bus_coach_details ON bus_schedule_info.unique_bus_id = bus_coach_details.unique_bus_id
+                    INNER JOIN coach_info ON bus_coach_details.coach_id = coach_info.coach_id
+                    INNER JOIN brand_name_info ON bus_coach_details.brand_name_id = brand_name_info.brand_name_id
+                    WHERE bus_schedule_info.bus_schedule_id = $1`,
+                    values: [busScheduleId]
+                };
+                const busInfoResult = await busPool.query(busInfoQuery);
+                const busInfo = busInfoResult.rows[0];
+                console.log(busInfo);
+
+                ticket.busInfo = busInfo;
+
+
+
+            // For air
+
+            // TODO: Add air ticket info to ticket object
+            // TODO: Add air info to ticket object
+            
+            // TODO: Add train ticket info to ticket object
+            // TODO: Add train info to ticket object
+            }
+
+            res.status(200).json({ busTicketInfo, busQueueTicketInfo });
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ message: 'Internal server error' });
+        }
+    });
+}
+
+
 module.exports = {
     userSignup,
-    userLogin
+    userLogin,
+    userTicketHistory
 }

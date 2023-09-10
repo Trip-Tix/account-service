@@ -26,4 +26,7 @@ router.post('/api/user/login', bodyParser, userController.userLogin);
 // test rabbitmq
 router.post('/api/admin/testRabbitmq', bodyParser, adminController.testRabbitMQ);
 
+// user ticket history
+router.post('/api/user/ticketHistory', bodyParser, userController.userTicketHistory);
+
 module.exports = router;
