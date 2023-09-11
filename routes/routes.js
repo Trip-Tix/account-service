@@ -30,6 +30,6 @@ router.post('/api/admin/testRabbitmq', bodyParser, adminController.testRabbitMQ)
 router.post('/api/user/ticketHistory', bodyParser, userController.userTicketHistory);
 
 // Add admin info
-router.post('/api/admin/addAdminInfo', bodyParser, adminController.allAdminInfo);
+router.post('/api/admin/allAdminInfo', bodyParser, adminController.allAdminInfo);
 
 module.exports = router;

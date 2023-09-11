@@ -60,6 +60,8 @@ const adminApproval = async (req, res) => {
     };
     const adminRoleResult = await accountPool.query(adminRoleQuery);
     const adminRoleId = adminRoleResult.rows[0].admin_role_id;
+    console.log(adminRoleId);
+    
     // Update admin role
     const adminQuery = {
       text: "UPDATE admin_info SET admin_role_id = $1, status = 1 WHERE admin_id = $2",
@@ -277,7 +279,7 @@ const addAdminRoleInfo = async (req, res) => {
 const allAdminInfo = async (req, res) => {
     // get the token
     // console.log(req)
-    const {token, username} = req.body;
+    const {token} = req.body;
     // const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
         return res.status(401).json({ message: 'No token provided' });
@@ -292,12 +294,14 @@ const allAdminInfo = async (req, res) => {
             res.status(401).json({ message: 'Unauthorized access: invalid token' });
         } else {
             try {
-                console.log("getCoachInfo called from bus-service");
+                console.log("allAdminInfo called from bus-service");
+                // get all from admin_info where admin_role_id is not equal to 100
                 const query = {
-                    text: 'SELECT * FROM admin_info WHERE username <> $1',
-                    values: [username],
+                    text: 'SELECT * FROM admin_info WHERE admin_role_id <> $1',
+                    values: [100],
                 };
-                const result = await busPool.query(query);
+
+                const result = await accountPool.query(query);
                 const adminInfo = result.rows;
                 // console.log(adminInfo);
 
@@ -306,7 +310,7 @@ const allAdminInfo = async (req, res) => {
                         text: 'SELECT admin_role_name FROM admin_role_info WHERE admin_role_id = $1',
                         values: [adminInfo[i].admin_role_id],
                     };
-                    const adminRoleResult = await busPool.query(adminRoleQuery);
+                    const adminRoleResult = await accountPool.query(adminRoleQuery);
                     adminInfo[i].admin_role_name = adminRoleResult.rows[0].admin_role_name;
                 }
 
