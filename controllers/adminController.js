@@ -52,11 +52,11 @@ const adminApproval = async (req, res) => {
     console.log("adminApproval called from account-service");
     accountPool.query("BEGIN");
     busPool.query("BEGIN");
-    const { adminId, adminRole, companyName } = req.body;
+    const { adminId, adminRoleName, companyName } = req.body;
     // Get the admin role id
     const adminRoleQuery = {
       text: "SELECT admin_role_id FROM admin_role_info WHERE admin_role_name = $1",
-      values: [adminRole],
+      values: [adminRoleName],
     };
     const adminRoleResult = await accountPool.query(adminRoleQuery);
     const adminRoleId = adminRoleResult.rows[0].admin_role_id;
@@ -69,6 +69,29 @@ const adminApproval = async (req, res) => {
     console.log("Admin role updated");
 
     // TODO: Add company name
+    if (adminRoleName === "BUS") {
+      const busQuery = {
+        text: "INSERT INTO bus_services (admin_id, bus_company_name) VALUES ($1, $2)",
+        values: [adminId, companyName],
+      };
+      await busPool.query(busQuery);
+      console.log("Bus company added");
+    } else if (adminRoleName === "AIR") {
+      const airQuery = {
+        text: "INSERT INTO air_services (admin_id, air_company_name) VALUES ($1, $2)",
+        values: [adminId, companyName],
+      };
+      await airPool.query(airQuery);
+      console.log("Air company added");
+    } else if (adminRoleName === "TRAIN") {
+      const trainQuery = {
+        text: "INSERT INTO train_services (admin_id, train_company_name) VALUES ($1, $2)",
+        values: [adminId, companyName],
+      };
+      await trainPool.query(trainQuery);
+      console.log("Train company added");
+    }
+    
     res.status(200).json({ message: "Admin approved" });
   } catch (error) {
     accountPool.query("ROLLBACK");
