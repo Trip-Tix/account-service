@@ -197,9 +197,26 @@ const userTicketHistory = async (req, res) => {
     });
 }
 
-
+const getUserCountOfAllUsers = async (req, res) => {
+    try {
+        
+        // Query the user_info table to count distinct user_id
+        const countUsersQuery = {
+            text: 'SELECT COUNT(DISTINCT user_id) FROM user_info',
+        };
+        const countResult = await accountPool.query(countUsersQuery);
+        const totalCount = countResult.rows[0].count;
+        console.log("Total users:", totalCount);
+        
+        res.status(200).json({ totalUniqueBuses: totalCount });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error.message });
+    }
+}
 module.exports = {
     userSignup,
     userLogin,
-    userTicketHistory
+    userTicketHistory,
+    getUserCountOfAllUsers,
 }

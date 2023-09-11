@@ -32,4 +32,6 @@ router.post('/api/user/ticketHistory', bodyParser, userController.userTicketHist
 // Add admin info
 router.post('/api/admin/allAdminInfo', bodyParser, adminController.allAdminInfo);
 
+router.post('/api/admin/getAllUserCountUser', bodyParser, userController.getUserCountOfAllUsers);
+
 module.exports = router;
