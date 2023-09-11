@@ -251,10 +251,56 @@ const addAdminRoleInfo = async (req, res) => {
   }
 };
 
+const allAdminInfo = async (req, res) => {
+    // get the token
+    // console.log(req)
+    const {token, username} = req.body;
+    // const token = req.headers.authorization?.split(' ')[1];
+    if (!token) {
+        return res.status(401).json({ message: 'No token provided' });
+    }
+
+    // verify the token
+    console.log("token", token)
+    console.log("secretKey", secretKey)
+    jwt.verify(token, secretKey, async (err, decoded) => {
+        if (err) {
+            console.log("Unauthorized access");
+            res.status(401).json({ message: 'Unauthorized access: invalid token' });
+        } else {
+            try {
+                console.log("getCoachInfo called from bus-service");
+                const query = {
+                    text: 'SELECT * FROM admin_info WHERE username <> $1',
+                    values: [username],
+                };
+                const result = await busPool.query(query);
+                const adminInfo = result.rows;
+                // console.log(adminInfo);
+
+                for (let i = 0; i < adminInfo.length; i++) {
+                    const adminRoleQuery = {
+                        text: 'SELECT admin_role_name FROM admin_role_info WHERE admin_role_id = $1',
+                        values: [adminInfo[i].admin_role_id],
+                    };
+                    const adminRoleResult = await busPool.query(adminRoleQuery);
+                    adminInfo[i].admin_role_name = adminRoleResult.rows[0].admin_role_name;
+                }
+
+                res.status(200).json(adminInfo);
+            } catch (error) {
+                res.status(500).json({ message: error.message });
+            }
+        }
+    });
+}
+
+
 module.exports = {
   adminSignup,
   adminLogin,
   addAdminRoleInfo,
   adminApproval,
   testRabbitMQ,
+  allAdminInfo
 };
