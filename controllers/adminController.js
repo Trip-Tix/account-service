@@ -61,7 +61,7 @@ const adminApproval = async (req, res) => {
     const adminRoleResult = await accountPool.query(adminRoleQuery);
     const adminRoleId = adminRoleResult.rows[0].admin_role_id;
     console.log(adminRoleId);
-    
+
     // Update admin role
     const adminQuery = {
       text: "UPDATE admin_info SET admin_role_id = $1, status = 1 WHERE admin_id = $2",
@@ -138,8 +138,8 @@ const adminSignup = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const query = {
-      text: "INSERT INTO admin_info (username, password, admin_name, admin_role_id, email) VALUES ($1, $2, $3, $4, $5)",
-      values: [username, hashedPassword, adminName, adminRoleId, email],
+      text: "INSERT INTO admin_info (username, password, admin_name, admin_role_id, email, company_name) VALUES ($1, $2, $3, $4, $5)",
+      values: [username, hashedPassword, adminName, adminRoleId, email, companyName],
     };
     await accountPool.query(query);
     console.log("Admin created");
