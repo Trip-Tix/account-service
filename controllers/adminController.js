@@ -138,7 +138,7 @@ const adminSignup = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     const query = {
-      text: "INSERT INTO admin_info (username, password, admin_name, admin_role_id, email, company_name) VALUES ($1, $2, $3, $4, $5)",
+      text: "INSERT INTO admin_info (username, password, admin_name, admin_role_id, email, company_name) VALUES ($1, $2, $3, $4, $5, $6)",
       values: [username, hashedPassword, adminName, adminRoleId, email, companyName],
     };
     await accountPool.query(query);
