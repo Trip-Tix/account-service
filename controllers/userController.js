@@ -177,19 +177,150 @@ const userTicketHistory = async (req, res) => {
                 console.log(busInfo);
 
                 ticket.busInfo = busInfo;
-
-
-
-            // For air
-
-            // TODO: Add air ticket info to ticket object
-            // TODO: Add air info to ticket object
-            
-            // TODO: Add train ticket info to ticket object
-            // TODO: Add train info to ticket object
             }
 
-            res.status(200).json({ busTicketInfo, busQueueTicketInfo });
+            // For train
+            const trainTicketInfoQuery = {
+                text: 'SELECT * FROM ticket_info WHERE user_id = $1',
+                values: [userId]
+            };
+            const trainTicketInfoResult = await trainPool.query(trainTicketInfoQuery);
+            const trainTicketInfo = trainTicketInfoResult.rows;
+            console.log(trainTicketInfo);
+
+            for (let i = 0; i < trainTicketInfo.length; i++) {
+                const trainTicket = trainTicketInfo[i];
+
+                const trainScheduleId = trainTicket.train_schedule_id;
+                const trainCoachId = trainTicket.coach_id;
+                const trainInfoQuery = {
+                    text: `SELECT train_schedule_info.unique_train_id, train_schedule_info.departure_time,
+                    train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name, coach_info.coach_name 
+                    FROM train_schedule_info
+                    INNER JOIN train_services ON train_schedule_info.train_id = train_services.train_id
+                    WHERE train_schedule_info.train_schedule_id = $1 
+                    AND coach_info.coach_id = $2`,
+                    values: [trainScheduleId, trainCoachId]
+                };
+                const trainInfoResult = await trainPool.query(trainInfoQuery);
+                const trainInfo = trainInfoResult.rows[0];
+                console.log(trainInfo);
+
+                trainTicket.trainInfo = trainInfo;
+
+                const journeyDate = new Date(trainInfo.schedule_date);
+                // Check if journey date is passed
+                const today = new Date();
+                const todayDate = today.toISOString().split('T')[0];
+                if (journeyDate < todayDate) {
+                    trainTicket.isJourneyDatePassed = true;
+                } else {
+                    trainTicket.isJourneyDatePassed = false;
+                }
+
+            }
+
+            const trainQueueTicketInfoQuery = {
+                text: 'SELECT * FROM ticket_queue WHERE user_id = $1',
+                values: [userId]
+            };
+            const trainQueueTicketInfoResult = await trainPool.query(trainQueueTicketInfoQuery);
+            const trainQueueTicketInfo = trainQueueTicketInfoResult.rows;
+            console.log(trainQueueTicketInfo);
+
+            for (let i = 0; i < trainQueueTicketInfo.length; i++) {
+                const trainTicket = trainQueueTicketInfo[i];
+                const trainScheduleId = trainTicket.train_schedule_id;
+                const trainCoachId = trainTicket.coach_id;
+                const trainInfoQuery = {
+                    text: `SELECT train_schedule_info.unique_train_id, train_schedule_info.departure_time,
+                    train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name, coach_info.coach_name
+                    FROM train_schedule_info
+                    INNER JOIN train_services ON train_schedule_info.train_id = train_services.train_id
+                    WHERE train_schedule_info.train_schedule_id = $1
+                    AND coach_info.coach_id = $2`,
+                    values: [trainScheduleId, trainCoachId]
+                };
+                const trainInfoResult = await trainPool.query(trainInfoQuery);
+                const trainInfo = trainInfoResult.rows[0];
+                console.log(trainInfo);
+
+                trainTicket.trainInfo = trainInfo;
+            }
+
+            // For air
+            const airTicketInfoQuery = {
+                text: 'SELECT * FROM ticket_info WHERE user_id = $1',
+                values: [userId]
+            };
+            const airTicketInfoResult = await airPool.query(airTicketInfoQuery);    
+            const airTicketInfo = airTicketInfoResult.rows;
+            console.log(airTicketInfo);
+
+            for (let i = 0; i < airTicketInfo.length; i++) {
+                const airTicket = airTicketInfo[i];
+
+                const airScheduleId = airTicket.air_schedule_id;
+                const airClassId = airTicket.class_id;
+
+                const airInfoQuery = {
+                    text: `SELECT air_schedule_info.unique_air_id, air_schedule_info.departure_time,
+                    air_schedule_info.schedule_date, air_schedule_info.air_id, air_services.air_company_name, class_info.class_name
+                    FROM air_schedule_info
+                    INNER JOIN air_services ON air_schedule_info.air_id = air_services.air_id
+                    WHERE air_schedule_info.air_schedule_id = $1
+                    AND class_info.class_id = $2`,
+                    values: [airScheduleId, airClassId]
+                };
+                const airInfoResult = await airPool.query(airInfoQuery);
+                const airInfo = airInfoResult.rows[0];
+                console.log(airInfo);
+
+                airTicket.airInfo = airInfo;
+
+                const journeyDate = new Date(airInfo.schedule_date);
+                // Check if journey date is passed
+                const today = new Date();
+                const todayDate = today.toISOString().split('T')[0];
+                if (journeyDate < todayDate) {
+                    airTicket.isJourneyDatePassed = true;
+                } else {
+                    airTicket.isJourneyDatePassed = false;
+                }
+
+            }
+
+            const airQueueTicketInfoQuery = {
+                text: 'SELECT * FROM ticket_queue WHERE user_id = $1',
+                values: [userId]
+            };
+            const airQueueTicketInfoResult = await airPool.query(airQueueTicketInfoQuery);
+            const airQueueTicketInfo = airQueueTicketInfoResult.rows;
+            console.log(airQueueTicketInfo);
+
+            for (let i = 0; i < airQueueTicketInfo.length; i++) {
+                const airTicket = airQueueTicketInfo[i];
+
+                const airScheduleId = airTicket.air_schedule_id;
+                const airClassId = airTicket.class_id;
+
+                const airInfoQuery = {
+                    text: `SELECT air_schedule_info.unique_air_id, air_schedule_info.departure_time,
+                    air_schedule_info.schedule_date, air_schedule_info.air_id, air_services.air_company_name, class_info.class_name
+                    FROM air_schedule_info
+                    INNER JOIN air_services ON air_schedule_info.air_id = air_services.air_id
+                    WHERE air_schedule_info.air_schedule_id = $1
+                    AND class_info.class_id = $2`,
+                    values: [airScheduleId, airClassId]
+                };
+                const airInfoResult = await airPool.query(airInfoQuery);
+                const airInfo = airInfoResult.rows[0];
+                console.log(airInfo);
+
+                airTicket.airInfo = airInfo;
+            }
+
+            res.status(200).json({ busTicketInfo, busQueueTicketInfo, trainTicketInfo, trainQueueTicketInfo, airTicketInfo, airQueueTicketInfo });
         } catch (err) {
             console.log(err);
             res.status(500).json({ message: 'Internal server error' });
