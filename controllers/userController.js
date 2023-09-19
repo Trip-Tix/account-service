@@ -99,7 +99,7 @@ const userTicketHistory = async (req, res) => {
             res.status(401).json({ message: 'Invalid token' });
             return;
         }
-        
+
         try {
             console.log("userTicketHistory called from account-service");
             console.log(req.body);
@@ -193,6 +193,8 @@ const userTicketHistory = async (req, res) => {
 
                 const trainScheduleId = trainTicket.train_schedule_id;
                 const trainCoachId = trainTicket.coach_id;
+                const trainSource = trainTicket.source;
+                const trainDestination = trainTicket.destination;
                 const trainInfoQuery = {
                     text: `SELECT train_schedule_info.unique_train_id, train_schedule_info.departure_time,
                     train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name 
@@ -204,6 +206,26 @@ const userTicketHistory = async (req, res) => {
                 const trainInfoResult = await trainPool.query(trainInfoQuery);
                 const trainInfo = trainInfoResult.rows[0];
                 console.log(trainInfo);
+
+                // Get source and destination name
+                const sourceQuery = {
+                    text: 'SELECT station_name FROM location_info WHERE location_id = $1',
+                    values: [trainSource]
+                };
+                const sourceResult = await trainPool.query(sourceQuery);
+                const sourceName = sourceResult.rows[0].station_name;
+                console.log(sourceName);
+
+                const destinationQuery = {
+                    text: 'SELECT station_name FROM location_info WHERE location_id = $1',
+                    values: [trainDestination]
+                };
+                const destinationResult = await trainPool.query(destinationQuery);
+                const destinationName = destinationResult.rows[0].station_name;
+                console.log(destinationName);
+
+                trainTicket.source = sourceName;
+                trainTicket.destination = destinationName;
 
                 // Get coach name
                 const coachInfoQuery = {
@@ -242,6 +264,8 @@ const userTicketHistory = async (req, res) => {
                 const trainTicket = trainQueueTicketInfo[i];
                 const trainScheduleId = trainTicket.train_schedule_id;
                 const trainCoachId = trainTicket.coach_id;
+                const trainSource = trainTicket.source;
+                const trainDestination = trainTicket.destination;
                 const trainInfoQuery = {
                     text: `SELECT train_schedule_info.unique_train_id, train_schedule_info.departure_time,
                     train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name 
@@ -253,6 +277,26 @@ const userTicketHistory = async (req, res) => {
                 const trainInfoResult = await trainPool.query(trainInfoQuery);
                 const trainInfo = trainInfoResult.rows[0];
                 console.log(trainInfo);
+
+                // Get source and destination name
+                const sourceQuery = {
+                    text: 'SELECT station_name FROM location_info WHERE location_id = $1',
+                    values: [trainSource]
+                };
+                const sourceResult = await trainPool.query(sourceQuery);
+                const sourceName = sourceResult.rows[0].station_name;
+                console.log(sourceName);
+
+                const destinationQuery = {
+                    text: 'SELECT station_name FROM location_info WHERE location_id = $1',
+                    values: [trainDestination]
+                };
+                const destinationResult = await trainPool.query(destinationQuery);
+                const destinationName = destinationResult.rows[0].station_name;
+                console.log(destinationName);
+
+                trainTicket.source = sourceName;
+                trainTicket.destination = destinationName;
 
                 // Get coach name
                 const coachInfoQuery = {
@@ -273,7 +317,7 @@ const userTicketHistory = async (req, res) => {
                 text: 'SELECT * FROM ticket_info WHERE user_id = $1',
                 values: [userId]
             };
-            const airTicketInfoResult = await airPool.query(airTicketInfoQuery);    
+            const airTicketInfoResult = await airPool.query(airTicketInfoQuery);
             const airTicketInfo = airTicketInfoResult.rows;
             console.log(airTicketInfo);
 
@@ -282,6 +326,8 @@ const userTicketHistory = async (req, res) => {
 
                 const airScheduleId = airTicket.air_schedule_id;
                 const airClassId = airTicket.class_id;
+                const airSource = airTicket.source;
+                const airDestination = airTicket.destination;
 
                 const airInfoQuery = {
                     text: `SELECT air_schedule_info.unique_air_id, air_schedule_info.departure_time,
@@ -294,6 +340,24 @@ const userTicketHistory = async (req, res) => {
                 const airInfoResult = await airPool.query(airInfoQuery);
                 const airInfo = airInfoResult.rows[0];
                 console.log(airInfo);
+
+                // Get source and destination name
+                const sourceQuery = {
+                    text: 'SELECT location_name, airport_name FROM location_info WHERE location_id = $1',
+                    values: [airSource]
+                };
+                const sourceResult = await airPool.query(sourceQuery);
+                const sourceName = sourceResult.rows[0].location_name + ' - ' + sourceResult.rows[0].airport_name;
+
+                const destinationQuery = {
+                    text: 'SELECT location_name, airport_name FROM location_info WHERE location_id = $1',
+                    values: [airDestination]
+                };
+                const destinationResult = await airPool.query(destinationQuery);
+                const destinationName = destinationResult.rows[0].location_name + ' - ' + destinationResult.rows[0].airport_name;
+
+                airTicket.source = sourceName;
+                airTicket.destination = destinationName;
 
                 // Get class name
                 const classInfoQuery = {
@@ -333,6 +397,8 @@ const userTicketHistory = async (req, res) => {
 
                 const airScheduleId = airTicket.air_schedule_id;
                 const airClassId = airTicket.class_id;
+                const airSource = airTicket.source;
+                const airDestination = airTicket.destination;
 
                 const airInfoQuery = {
                     text: `SELECT air_schedule_info.unique_air_id, air_schedule_info.departure_time,
@@ -345,6 +411,24 @@ const userTicketHistory = async (req, res) => {
                 const airInfoResult = await airPool.query(airInfoQuery);
                 const airInfo = airInfoResult.rows[0];
                 console.log(airInfo);
+
+                // Get source and destination name
+                const sourceQuery = {
+                    text: 'SELECT location_name, airport_name FROM location_info WHERE location_id = $1',
+                    values: [airSource]
+                };
+                const sourceResult = await airPool.query(sourceQuery);
+                const sourceName = sourceResult.rows[0].location_name + ' - ' + sourceResult.rows[0].airport_name;
+
+                const destinationQuery = {
+                    text: 'SELECT location_name, airport_name FROM location_info WHERE location_id = $1',
+                    values: [airDestination]
+                };
+                const destinationResult = await airPool.query(destinationQuery);
+                const destinationName = destinationResult.rows[0].location_name + ' - ' + destinationResult.rows[0].airport_name;
+
+                airTicket.source = sourceName;
+                airTicket.destination = destinationName;
 
                 // Get class name
                 const classInfoQuery = {
@@ -370,7 +454,7 @@ const userTicketHistory = async (req, res) => {
 
 const getUserCountOfAllUsers = async (req, res) => {
     try {
-        
+
         // Query the user_info table to count distinct user_id
         const countUsersQuery = {
             text: 'SELECT COUNT(DISTINCT user_id) FROM user_info',
@@ -378,7 +462,7 @@ const getUserCountOfAllUsers = async (req, res) => {
         const countResult = await accountPool.query(countUsersQuery);
         const totalCount = countResult.rows[0].count;
         console.log("Total users:", totalCount);
-        
+
         res.status(200).json({ totalUniqueBuses: totalCount });
     } catch (error) {
         console.log(error);
