@@ -122,7 +122,7 @@ const userTicketHistory = async (req, res) => {
                     bus_schedule_info.schedule_date, bus_schedule_info.bus_id, bus_services.bus_company_name, 
                     bus_coach_details.coach_id, bus_coach_details.brand_name_id, coach_info.coach_name, 
                     brand_name_info.brand_name  
-                    FROM bus_schedule_info 
+                    FROM bus_schedule_info  
                     INNER JOIN bus_services ON bus_schedule_info.bus_id = bus_services.bus_id 
                     INNER JOIN bus_coach_details ON bus_schedule_info.unique_bus_id = bus_coach_details.unique_bus_id 
                     INNER JOIN coach_info ON bus_coach_details.coach_id = coach_info.coach_id 
@@ -195,16 +195,26 @@ const userTicketHistory = async (req, res) => {
                 const trainCoachId = trainTicket.coach_id;
                 const trainInfoQuery = {
                     text: `SELECT train_schedule_info.unique_train_id, train_schedule_info.departure_time,
-                    train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name, coach_info.coach_name 
+                    train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name 
                     FROM train_schedule_info
                     INNER JOIN train_services ON train_schedule_info.train_id = train_services.train_id
-                    WHERE train_schedule_info.train_schedule_id = $1 
-                    AND coach_info.coach_id = $2`,
-                    values: [trainScheduleId, trainCoachId]
+                    WHERE train_schedule_info.train_schedule_id = $1`,
+                    values: [trainScheduleId]
                 };
                 const trainInfoResult = await trainPool.query(trainInfoQuery);
                 const trainInfo = trainInfoResult.rows[0];
                 console.log(trainInfo);
+
+                // Get coach name
+                const coachInfoQuery = {
+                    text: 'SELECT coach_name FROM coach_info WHERE coach_id = $1',
+                    values: [trainCoachId]
+                };
+                const coachInfoResult = await trainPool.query(coachInfoQuery);
+                const coachInfo = coachInfoResult.rows[0];
+                console.log(coachInfo);
+
+                trainInfo.coach_name = coachInfo.coach_name;
 
                 trainTicket.trainInfo = trainInfo;
 
@@ -234,16 +244,26 @@ const userTicketHistory = async (req, res) => {
                 const trainCoachId = trainTicket.coach_id;
                 const trainInfoQuery = {
                     text: `SELECT train_schedule_info.unique_train_id, train_schedule_info.departure_time,
-                    train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name, coach_info.coach_name
+                    train_schedule_info.schedule_date, train_schedule_info.train_id, train_services.train_company_name 
                     FROM train_schedule_info
                     INNER JOIN train_services ON train_schedule_info.train_id = train_services.train_id
-                    WHERE train_schedule_info.train_schedule_id = $1
-                    AND coach_info.coach_id = $2`,
-                    values: [trainScheduleId, trainCoachId]
+                    WHERE train_schedule_info.train_schedule_id = $1`,
+                    values: [trainScheduleId]
                 };
                 const trainInfoResult = await trainPool.query(trainInfoQuery);
                 const trainInfo = trainInfoResult.rows[0];
                 console.log(trainInfo);
+
+                // Get coach name
+                const coachInfoQuery = {
+                    text: 'SELECT coach_name FROM coach_info WHERE coach_id = $1',
+                    values: [trainCoachId]
+                };
+                const coachInfoResult = await trainPool.query(coachInfoQuery);
+                const coachInfo = coachInfoResult.rows[0];
+                console.log(coachInfo);
+
+                trainInfo.coach_name = coachInfo.coach_name;
 
                 trainTicket.trainInfo = trainInfo;
             }
@@ -265,16 +285,26 @@ const userTicketHistory = async (req, res) => {
 
                 const airInfoQuery = {
                     text: `SELECT air_schedule_info.unique_air_company_id, air_schedule_info.departure_time,
-                    air_schedule_info.schedule_date, air_schedule_info.air_company_id, air_services.air_company_name, class_info.class_name
+                    air_schedule_info.schedule_date, air_schedule_info.air_company_id, air_services.air_company_name 
                     FROM air_schedule_info
                     INNER JOIN air_services ON air_schedule_info.air_company_id = air_services.air_company_id
-                    WHERE air_schedule_info.air_schedule_id = $1
-                    AND class_info.class_id = $2`,
-                    values: [airScheduleId, airClassId]
+                    WHERE air_schedule_info.air_schedule_id = $1`,
+                    values: [airScheduleId]
                 };
                 const airInfoResult = await airPool.query(airInfoQuery);
                 const airInfo = airInfoResult.rows[0];
                 console.log(airInfo);
+
+                // Get class name
+                const classInfoQuery = {
+                    text: 'SELECT class_name FROM class_info WHERE class_id = $1',
+                    values: [airClassId]
+                };
+                const classInfoResult = await airPool.query(classInfoQuery);
+                const classInfo = classInfoResult.rows[0];
+                console.log(classInfo);
+
+                airInfo.class_name = classInfo.class_name;
 
                 airTicket.airInfo = airInfo;
 
@@ -306,16 +336,26 @@ const userTicketHistory = async (req, res) => {
 
                 const airInfoQuery = {
                     text: `SELECT air_schedule_info.unique_air_company_id, air_schedule_info.departure_time,
-                    air_schedule_info.schedule_date, air_schedule_info.air_company_id, air_services.air_company_name, class_info.class_name
+                    air_schedule_info.schedule_date, air_schedule_info.air_company_id, air_services.air_company_name 
                     FROM air_schedule_info
                     INNER JOIN air_services ON air_schedule_info.air_company_id = air_services.air_company_id
-                    WHERE air_schedule_info.air_schedule_id = $1
-                    AND class_info.class_id = $2`,
-                    values: [airScheduleId, airClassId]
+                    WHERE air_schedule_info.air_schedule_id = $1`,
+                    values: [airScheduleId]
                 };
                 const airInfoResult = await airPool.query(airInfoQuery);
                 const airInfo = airInfoResult.rows[0];
                 console.log(airInfo);
+
+                // Get class name
+                const classInfoQuery = {
+                    text: 'SELECT class_name FROM class_info WHERE class_id = $1',
+                    values: [airClassId]
+                };
+                const classInfoResult = await airPool.query(classInfoQuery);
+                const classInfo = classInfoResult.rows[0];
+                console.log(classInfo);
+
+                airInfo.class_name = classInfo.class_name;
 
                 airTicket.airInfo = airInfo;
             }
