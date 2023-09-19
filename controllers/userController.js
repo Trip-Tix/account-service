@@ -264,10 +264,10 @@ const userTicketHistory = async (req, res) => {
                 const airClassId = airTicket.class_id;
 
                 const airInfoQuery = {
-                    text: `SELECT air_schedule_info.unique_air_id, air_schedule_info.departure_time,
-                    air_schedule_info.schedule_date, air_schedule_info.air_id, air_services.air_company_name, class_info.class_name
+                    text: `SELECT air_schedule_info.unique_air_company_id, air_schedule_info.departure_time,
+                    air_schedule_info.schedule_date, air_schedule_info.air_company_id, air_services.air_company_name, class_info.class_name
                     FROM air_schedule_info
-                    INNER JOIN air_services ON air_schedule_info.air_id = air_services.air_id
+                    INNER JOIN air_services ON air_schedule_info.air_company_id = air_services.air_company_id
                     WHERE air_schedule_info.air_schedule_id = $1
                     AND class_info.class_id = $2`,
                     values: [airScheduleId, airClassId]
@@ -305,10 +305,10 @@ const userTicketHistory = async (req, res) => {
                 const airClassId = airTicket.class_id;
 
                 const airInfoQuery = {
-                    text: `SELECT air_schedule_info.unique_air_id, air_schedule_info.departure_time,
-                    air_schedule_info.schedule_date, air_schedule_info.air_id, air_services.air_company_name, class_info.class_name
+                    text: `SELECT air_schedule_info.unique_air_company_id, air_schedule_info.departure_time,
+                    air_schedule_info.schedule_date, air_schedule_info.air_company_id, air_services.air_company_name, class_info.class_name
                     FROM air_schedule_info
-                    INNER JOIN air_services ON air_schedule_info.air_id = air_services.air_id
+                    INNER JOIN air_services ON air_schedule_info.air_company_id = air_services.air_company_id
                     WHERE air_schedule_info.air_schedule_id = $1
                     AND class_info.class_id = $2`,
                     values: [airScheduleId, airClassId]
